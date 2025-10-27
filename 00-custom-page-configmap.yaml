@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fallback-page-config
+data:
+  # Este será o nome do arquivo (index.html)
+  # O | indica que o que vem abaixo é um bloco de texto multi-linha
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="pt-br">
+    <head>
+        <title>Sistema de Contingência</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                text-align: center; 
+                margin-top: 100px; 
+                background-color: #fff8e1; /* Um amarelo claro de "alerta" */
+                color: #333;
+            }
+            h1 { 
+                color: #d9534f; /* Vermelho */
+            }
+        </style>
+    </head>
+    <body>
+        <h1>API de Fallback Ativada</h1>
+        <p>O servi&ccedil;o prim&aacute;rio (internal-api-primary) falhou em responder.</p>
+        <p>Voc&ecirc; foi redirecionado para este endpoint de conting&ecirc;ncia (o Nginx).</p>
+        <p><strong>A importa&ccedil;o de dados (Job) foi conclu&iacute;da com SUCESSO usando esta rota.</strong></p>
+    </body>
+    </html>

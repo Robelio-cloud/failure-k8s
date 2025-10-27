@@ -1,0 +1,83 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: daily-import-job-resiliente
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - name: import-worker-with-backoff
+        image: curlimages/curl:latest 
+        
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            # --- Configuração da Estratégia ---
+            PRIMARY_URL="http://internal-api-primary"
+            FALLBACK_URL="http://internal-api-fallback"
+            MAX_ATTEMPTS=3
+            BASE_SLEEP_SECONDS=5 # Base para o backoff (5s, 10s, 15s)
+            
+            echo "[$(date)] Job de importação (com backoff) iniciado."
+            echo "[$(date)] Chave API carregada (log): ${MY_API_KEY:0:10}..." # Log parcial da chave
+            
+            # --- Lógica de Retry/Backoff no Primário ---
+            success=false
+            
+            # Tenta executar o loop MAX_ATTEMPTS vezes (ex: 3 vezes)
+            for i in $(seq 1 $MAX_ATTEMPTS); do
+              echo "[$(date)] Tentativa $i/$MAX_ATTEMPTS: Acessando primário ($PRIMARY_URL)..."
+              
+              # 'if curl...' só executa o 'then' se o curl retornar código 0 (sucesso)
+              if curl -sf --connect-timeout 5 $PRIMARY_URL; then
+                echo "[$(date)] SUCESSO: Conexão primária bem-sucedida na tentativa $i."
+                success=true
+                break # Sai do loop 'for' com sucesso
+              fi
+              
+              # Se chegou aqui, o curl falhou.
+              
+              # Se não for a última tentativa, aplica o backoff
+              if [ $i -lt $MAX_ATTEMPTS ]; then
+                sleep_time=$((i * BASE_SLEEP_SECONDS)) # Backoff linear: 1*5s, 2*5s=10s...
+                echo "[$(date)] FALHA (Tentativa $i): Primário inacessível. Aguardando $sleep_time segundos (backoff)..."
+                sleep $sleep_time
+              fi
+            done
+            
+            # --- Verificação Pós-Loop ---
+            
+            # Se o loop terminou com sucesso, encerra o Job com sucesso
+            if [ "$success" = "true" ]; then
+              echo "[$(date)] Job concluído com SUCESSO (via primário)."
+              exit 0
+            fi
+            
+            # --- Lógica de Fallback (só executa se o loop falhar 3x) ---
+            
+            echo "[$(date)] FALHA GERAL (Primário): Endpoint $PRIMARY_URL inacessível após $MAX_ATTEMPTS tentativas."
+            echo "[$(date)] ACIONANDO FALLBACK para $FALLBACK_URL..."
+            
+            if curl -sf --connect-timeout 5 $FALLBACK_URL; then
+              echo "[$(date)] SUCESSO: Dados importados via endpoint de FALLBACK."
+              exit 0
+            else
+              echo "[$(date)] FALHA GERAL (Primário E Fallback): Todos os endpoints falharam."
+              exit 1
+            fi
+
+        # ------------------------------------
+        # CORREÇÃO AQUI: 'env:' está agora
+        # DENTRO de 'containers:'
+        # ------------------------------------
+        env:
+          # Injeta o Secret como variável de ambiente
+          - name: MY_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: api-credentials
+                key: API_KEY
+      
+      # 'restartPolicy' fica no nível do 'spec'
+      restartPolicy: Never

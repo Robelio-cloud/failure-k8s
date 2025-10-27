@@ -1,0 +1,54 @@
+# -----------------
+# DEPLOYMENT DE FALLBACK (O QUE FUNCIONA)
+# -----------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fallback-api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fallback-app
+  template:
+    metadata:
+      labels:
+        app: fallback-app
+    spec:
+      # --- ADIÇÃO 1: Definir o Volume ---
+      # Aqui dizemos ao Pod para "pegar" o ConfigMap
+      volumes:
+      - name: nginx-html-volume # Um nome que daremos ao volume
+        configMap:
+          # O nome do ConfigMap que criamos no Passo 2
+          name: fallback-page-config 
+      
+      containers:
+      - name: nginx
+        image: nginx:alpine 
+        ports:
+        - containerPort: 80
+        
+        # --- ADIÇÃO 2: Montar o Volume ---
+        # Aqui dizemos ao container Nginx para USAR o volume
+        volumeMounts:
+        - name: nginx-html-volume # O mesmo nome do volume acima
+          # O Nginx serve arquivos deste diretório:
+          mountPath: /usr/share/nginx/html/index.html
+          # Qual "chave" (arquivo) do ConfigMap queremos usar:
+          subPath: index.html 
+---
+# -----------------
+# SERVICE DE FALLBACK (O QUE FUNCIONA)
+# -----------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: internal-api-fallback
+spec:
+  selector:
+    app: fallback-app 
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
