@@ -39,7 +39,8 @@ Siga estes passos para replicar a simulação no seu ambiente WSL.
     * Vá em `Settings > Resources > WSL Integration`.
     * Habilite a integração com sua distro Ubuntu.
     * Clique em `Apply & Restart`.
-    ![image](/assets/image01.png)
+
+    ![image](/images/image01.png)
 
 2.  **KIND (Kubernetes in Docker):**
     Instale o KIND (Kubernetes in Docker) dentro do seu terminal WSL Ubuntu.
@@ -57,7 +58,8 @@ Siga estes passos para replicar a simulação no seu ambiente WSL.
     # 4. Verificar a instalação
     kind version
     ```
-    ![image](/assets/image02.png)
+    
+    ![image](/images/image02.png)
 
 ### Passo 0: Criar o Cluster KIND
 
@@ -66,7 +68,8 @@ Crie um cluster de Kubernetes local chamado `failure-k8s`.
 ```bash
 kind create cluster --name failure-k8s
 ```
-![image](/assets/image03.png)
+
+![image](/images/image03.png)
 
 Passo 1: Clonar o Repositório
 Obtenha todos os arquivos YAML necessários clonando este repositório.
@@ -76,7 +79,8 @@ Bash
 # Clona o repositório
 git clone [https://github.com/Robelio-cloud/failure-k8s.git](https://github.com/Robelio-cloud/failure-k8s.git)
  
-![image](/assets/image04.png)
+
+![image](/images/image04.png)
 
 # Acessa o diretório do projeto
 cd failure-k8s
@@ -85,9 +89,11 @@ Dentro do diretório failure-k8s abrir o VScode para criação dos arquivos YAML
 
 code . 
 
-![image](/assets/image05.png)
 
-![image](/assets/image06.png)
+![image](/images/image05.png)
+
+
+![image](/images/image06.png)
 
 ## 00-custom-page-configmap.yaml
 Criar o ConfigMap com o HTML customizada API de Fallback Ativada, substituindo a página padrão do Nginx
@@ -126,7 +132,8 @@ data:
     </body>
     </html>
 ```
-![image](/assets/image08c.png)
+
+![image](/images/image08c.png)
 
 
 ## 01-secret.yaml
@@ -144,7 +151,7 @@ stringData:
   API_KEY: "secret-key-para-importacao-123456"
 ```
 
-![image](/assets/image07.png)
+![image](/images/image07.png)
 
 ## 02-fallback-app.yaml
 Este é o Deployment e o Service de fallback (o que funciona).
@@ -206,7 +213,9 @@ spec:
     port: 80
     targetPort: 80
 ```
-![image](/assets/image08.png)
+
+![image](/images/image08.png)
+
 
 ## 03-primary-service-falho.yaml
 Este é o Service primário (que vai falhar). Note que criamos o Service, mas não há Deployment ou Pods com o label app: primary-app.
@@ -225,7 +234,9 @@ spec:
     port: 80
     targetPort: 80
 ```
-![image](/assets/image08a.png)
+
+![image](/images/image08a.png)
+
 
 ## 04-job-com-backoff.yaml 
 Note como a seção args: do container inclui a lógica de loop, sleep (backoff) e retry antes de finalmente tentar o fallback.
@@ -315,7 +326,8 @@ spec:
       # 'restartPolicy' fica no nível do 'spec'
       restartPolicy: Never
 ```
-![image](/assets/image08b.png)
+
+![image](/images/image08b.png)
 
 
 Passo 2: Aplicar os Recursos da Simulação
@@ -333,7 +345,9 @@ service/internal-api-fallback created
 service/internal-api-primary created
 job.batch/daily-import-job-resiliente created
 
-![image](/assets/image09.png)
+
+![image](/images/image09.png)
+
 
 Verificando a Simulação (As Evidências)
 Com os recursos aplicados, o Job iniciará imediatamente. Vamos verificar os resultados.
@@ -346,7 +360,9 @@ Encontre o nome do Pod do Job: O Kubernetes cria um pod para o job com um nome a
 kubectl get pods
 (Procure pelo pod que começa com daily-import-job-resiliente-... e status Running ou Completed).
 
-![image](/assets/image10.png)
+
+![image](/images/image10.png)
+
 
 Veja os Logs: Use o nome do pod encontrado para ver os logs. O comando -f (follow) permite ver os logs ao vivo.
 
@@ -369,7 +385,9 @@ O curl imprimindo o HTML da nossa página customizada ("Sistema de Contingência
 
 A mensagem final de SUCESSO.
 
-![image](/assets/image11.png)
+
+![image](/images/image11.png)
+
 
 Abra um novo terminal WSL.
 
@@ -386,7 +404,9 @@ Forwarding from [::1]:8081 -> 80
 Abra seu navegador: Acesse http://localhost:8081. 
 Você verá a página "API de Fallback Ativada", confirmando que o serviço de contingência está no ar e servindo o HTML customizado. 
 
-![image](/assets/image14.png)
+
+![image](/images/image14.png)
+
 
 # Arquitetura dos Arquivos YAML
 
