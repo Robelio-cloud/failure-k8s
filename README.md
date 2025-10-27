@@ -1,6 +1,3 @@
-<!-- Context for the first image -->
-![image](images/image01.png)
-![image](images/image02.png)
 # Simulação de Falha e Resiliência de Job/Endpoint no Kubernetes (KIND)
 
 Este repositório contém os arquivos e a documentação de uma simulação de falha de serviço no Kubernetes, executada localmente com KIND no WSL Ubuntu.
