@@ -1,3 +1,6 @@
+<!-- Context for the first image -->
+![image](images/image01.png)
+![image](images/image02.png)
 # Simulação de Falha e Resiliência de Job/Endpoint no Kubernetes (KIND)
 
 Este repositório contém os arquivos e a documentação de uma simulação de falha de serviço no Kubernetes, executada localmente com KIND no WSL Ubuntu.
@@ -40,7 +43,7 @@ Siga estes passos para replicar a simulação no seu ambiente WSL.
     * Habilite a integração com sua distro Ubuntu.
     * Clique em `Apply & Restart`.
 
-    ![image](/images/image01.png)
+    ![image](images/image01.png)
 
 2.  **KIND (Kubernetes in Docker):**
     Instale o KIND (Kubernetes in Docker) dentro do seu terminal WSL Ubuntu.
@@ -59,7 +62,7 @@ Siga estes passos para replicar a simulação no seu ambiente WSL.
     kind version
     ```
     
-    ![image](/images/image02.png)
+    ![image](images/image02.png)
 
 ### Passo 0: Criar o Cluster KIND
 
@@ -69,7 +72,7 @@ Crie um cluster de Kubernetes local chamado `failure-k8s`.
 kind create cluster --name failure-k8s
 ```
 
-![image](/images/image03.png)
+![image](images/image03.png)
 
 Passo 1: Clonar o Repositório
 Obtenha todos os arquivos YAML necessários clonando este repositório.
@@ -80,7 +83,7 @@ Bash
 git clone [https://github.com/Robelio-cloud/failure-k8s.git](https://github.com/Robelio-cloud/failure-k8s.git)
  
 
-![image](/images/image04.png)
+![image](images/image04.png)
 
 # Acessa o diretório do projeto
 cd failure-k8s
@@ -90,10 +93,10 @@ Dentro do diretório failure-k8s abrir o VScode para criação dos arquivos YAML
 code . 
 
 
-![image](/images/image05.png)
+![image](images/image05.png)
 
 
-![image](/images/image06.png)
+![image](images/image06.png)
 
 ## 00-custom-page-configmap.yaml
 Criar o ConfigMap com o HTML customizada API de Fallback Ativada, substituindo a página padrão do Nginx
@@ -133,7 +136,7 @@ data:
     </html>
 ```
 
-![image](/images/image08c.png)
+![image](images/image08c.png)
 
 
 ## 01-secret.yaml
@@ -151,7 +154,7 @@ stringData:
   API_KEY: "secret-key-para-importacao-123456"
 ```
 
-![image](/images/image07.png)
+![image](images/image07.png)
 
 ## 02-fallback-app.yaml
 Este é o Deployment e o Service de fallback (o que funciona).
@@ -214,7 +217,7 @@ spec:
     targetPort: 80
 ```
 
-![image](/images/image08.png)
+![image](images/image08.png)
 
 
 ## 03-primary-service-falho.yaml
@@ -235,7 +238,7 @@ spec:
     targetPort: 80
 ```
 
-![image](/images/image08a.png)
+![image](images/image08a.png)
 
 
 ## 04-job-com-backoff.yaml 
@@ -327,7 +330,7 @@ spec:
       restartPolicy: Never
 ```
 
-![image](/images/image08b.png)
+![image](images/image08b.png)
 
 
 Passo 2: Aplicar os Recursos da Simulação
@@ -346,7 +349,7 @@ service/internal-api-primary created
 job.batch/daily-import-job-resiliente created
 
 
-![image](/images/image09.png)
+![image](images/image09.png)
 
 
 Verificando a Simulação (As Evidências)
@@ -361,7 +364,7 @@ kubectl get pods
 (Procure pelo pod que começa com daily-import-job-resiliente-... e status Running ou Completed).
 
 
-![image](/images/image10.png)
+![image](images/image10.png)
 
 
 Veja os Logs: Use o nome do pod encontrado para ver os logs. O comando -f (follow) permite ver os logs ao vivo.
@@ -386,7 +389,7 @@ O curl imprimindo o HTML da nossa página customizada ("Sistema de Contingência
 A mensagem final de SUCESSO.
 
 
-![image](/images/image11.png)
+![image](images/image11.png)
 
 
 Abra um novo terminal WSL.
@@ -405,7 +408,7 @@ Abra seu navegador: Acesse http://localhost:8081.
 Você verá a página "API de Fallback Ativada", confirmando que o serviço de contingência está no ar e servindo o HTML customizado. 
 
 
-![image](/images/image14.png)
+![image](images/image14.png)
 
 
 # Arquitetura dos Arquivos YAML
