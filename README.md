@@ -126,7 +126,7 @@ data:
     </body>
     </html>
 ```
-![image](/assets/image08.3.png)
+![image](/assets/image08c.png)
 
 
 ## 01-secret.yaml
@@ -225,7 +225,7 @@ spec:
     targetPort: 80
 ```
 
-![image](/assets/image08.1.png)
+![image](/assets/image08a.png)
 
 ## 04-job-com-backoff.yaml 
 Note como a seção args: do container inclui a lógica de loop, sleep (backoff) e retry antes de finalmente tentar o fallback.
@@ -315,7 +315,7 @@ spec:
       # 'restartPolicy' fica no nível do 'spec'
       restartPolicy: Never
 ```
-![image](/assets/image08.2.png)
+![image](/assets/image08b.png)
 
 
 Passo 2: Aplicar os Recursos da Simulação
