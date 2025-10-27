@@ -46,7 +46,7 @@ Siga estes passos para replicar a simulação no seu ambiente WSL.
 
     ```bash
     # 1. Baixar o binário
-    curl -Lo ./kind [https://kind.sigs.k8s.io/dl/v0.23.0/kind-linux-amd64](https://kind.sigs.k8s.io/dl/v0.30.0/kind-linux-amd64)
+    curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.30.0/kind-linux-amd64
     
     # 2. Tornar executável
     chmod +x ./kind
