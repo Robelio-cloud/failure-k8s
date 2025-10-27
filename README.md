@@ -143,6 +143,7 @@ stringData:
   # Chave de API fictícia que o job usará
   API_KEY: "secret-key-para-importacao-123456"
 ```
+
 ![image](/assets/image07.png)
 
 ## 02-fallback-app.yaml
@@ -224,7 +225,6 @@ spec:
     port: 80
     targetPort: 80
 ```
-
 ![image](/assets/image08a.png)
 
 ## 04-job-com-backoff.yaml 
@@ -386,7 +386,7 @@ Forwarding from [::1]:8081 -> 80
 Abra seu navegador: Acesse http://localhost:8081. 
 Você verá a página "API de Fallback Ativada", confirmando que o serviço de contingência está no ar e servindo o HTML customizado. 
 
-![image](/assets/image12.png)
+![image](/assets/image14.png)
 
 # Arquitetura dos Arquivos YAML
 
