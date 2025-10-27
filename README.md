@@ -39,8 +39,7 @@ Siga estes passos para replicar a simulação no seu ambiente WSL.
     * Vá em `Settings > Resources > WSL Integration`.
     * Habilite a integração com sua distro Ubuntu.
     * Clique em `Apply & Restart`.
-
-    ![Integração Docker WSL](https://i.imgur.com/gYf0aWp.png)
+    *(Como visto no PDF: captura de tela da integração do Docker com WSL)*
 
 2.  **KIND (Kubernetes in Docker):**
     Instale o KIND (Kubernetes in Docker) dentro do seu terminal WSL Ubuntu.
@@ -65,3 +64,122 @@ Crie um cluster de Kubernetes local chamado `failure-k8s`.
 
 ```bash
 kind create cluster --name failure-k8s
+```
+Passo 1: Clonar o Repositório
+Obtenha todos os arquivos YAML necessários clonando este repositório.
+
+Bash
+
+# Clona o repositório
+git clone [https://github.com/Robelio-cloud/failure-k8s.git](https://github.com/Robelio-cloud/failure-k8s.git)
+ 
+# Acessa o diretório do projeto
+cd failure-k8s
+Passo 2: Aplicar os Recursos da Simulação
+Agora, aplique todos os arquivos YAML (o ConfigMap, o Secret, os Serviços e o Job) no seu cluster de uma só vez.
+
+
+kubectl apply -f .
+Saída Esperada:
+
+configmap/fallback-page-config created
+secret/api-credentials configured
+deployment.apps/fallback-api-deployment created
+service/internal-api-fallback created
+service/internal-api-primary created
+job.batch/daily-import-job-resiliente created
+Verificando a Simulação (As Evidências)
+Com os recursos aplicados, o Job iniciará imediatamente. Vamos verificar os resultados.
+
+Evidência 1: Logs do Job (Backoff + Fallback)
+Esta é a evidência principal. O log do Job nos mostrará a falha, as tentativas de backoff e o sucesso final via fallback.
+
+Encontre o nome do Pod do Job: O Kubernetes cria um pod para o job com um nome aleatório.
+
+
+kubectl get pods
+(Procure pelo pod que começa com daily-import-job-resiliente-... e status Running ou Completed).
+
+Veja os Logs: Use o nome do pod encontrado para ver os logs. O comando -f (follow) permite ver os logs ao vivo.
+
+
+# Substitua 'daily-import-job-resiliente-dqmvf' pelo nome do seu pod
+kubectl logs -f daily-import-job-resiliente-dqmvf 
+Resultado do Log (Sucesso): O log mostrará:
+
+O Job iniciando.
+
+A Tentativa 1 falhando e o script aguardando 5 segundos.
+
+A Tentativa 2 falhando e o script aguardando 10 segundos.
+
+A Tentativa 3 falhando, levando à falha geral do primário.
+
+O ACIONANDO FALLBACK.
+
+O curl imprimindo o HTML da nossa página customizada ("Sistema de Contingência").
+
+A mensagem final de SUCESSO.
+
+Snippet de código
+
+[Mon Oct 27 19:31:45 UTC 2025] Job de importação (com backoff) iniciado.
+[Mon Oct 27 19:31:45 UTC 2025] Chave API carregada (log): secret-key...
+[Mon Oct 27 19:31:45 UTC 2025] Tentativa 1/3: Acessando primário (http://internal-api-primary)...
+[Mon Oct 27 19:31:45 UTC 2025] FALHA (Tentativa 1): Primário inacessível. Aguardando 5 segundos (backoff)...
+[Mon Oct 27 19:31:50 UTC 2025] Tentativa 2/3: Acessando primário (http://internal-api-primary)...
+[Mon Oct 27 19:31:50 UTC 2025] FALHA (Tentativa 2): Primário inacessível. Aguardando 10 segundos (backoff)...
+[Mon Oct 27 19:32:00 UTC 2025] Tentativa 3/3: Acessando primário (http://internal-api-primary)...
+[Mon Oct 27 19:32:00 UTC 2025] FALHA GERAL (Primário): Endpoint http://internal-api-primary inacessível após 3 tentativas.
+[Mon Oct 27 19:32:00 UTC 2025] ACIONANDO FALLBACK para http://internal-api-fallback...
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<title>Sistema de Contingência</title>
+<style>
+body {
+font-family: Arial, sans-serif;
+text-align: center;
+margin-top: 100px;
+background-color: #fff8e1; /* Um amarelo claro de "alerta" */
+color: #333;
+}
+h1 {
+color: #d9534f; /* Vermelho */
+}
+</style>
+</head>
+<body>
+<h1>API de Fallback Ativada</h1>
+<p>O servi&ccedil;o prim&aacute;rio (internal-api-primary) falhou em responder.</p>
+<p>Voc&ecirc; foi redirecionado para este endpoint de conting&ecirc;ncia (o Nginx).</p>
+<p><strong>A importa&ccedil;o de dados (Job) foi conclu&iacute;da com SUCESSO usando esta rota.</strong></p>
+</body>
+</html>
+[Mon Oct 27 19:32:00 UTC 2025] SUCESSO: Dados importados via endpoint de FALLBACK.
+Evidência 2: Acessando o Endpoint de Fallback (Localhost)
+Podemos verificar a página de contingência diretamente no nosso navegador criando um "túnel" para o serviço.
+
+Abra um novo terminal WSL.
+
+Execute o kubectl port-forward. Usamos a porta local 8081 (pois a 8080 pode estar em uso).
+
+Bash
+
+kubectl port-forward service/internal-api-fallback 8081:80
+Saída Esperada:
+
+Forwarding from 127.0.0.1:8081 -> 80
+Forwarding from [::1]:8081 -> 80
+Abra seu navegador: Acesse http://localhost:8081. Você verá a página "API de Fallback Ativada", confirmando que o serviço de contingência está no ar e servindo o HTML customizado. (Como visto no PDF: captura de tela da página de fallback sendo exibida no navegador)
+
+Arquitetura dos Arquivos YAML
+00-custom-page-configmap.yaml: Cria um ConfigMap que armazena nosso index.html customizado de "Sistema de Contingência".
+
+01-secret.yaml: Cria o Secret api-credentials com uma chave API_KEY fictícia.
+
+02-fallback-app.yaml: Cria o Deployment (Nginx) e o Service para o endpoint de fallback (internal-api-fallback). Este arquivo é modificado para montar o ConfigMap e substituir a página padrão do Nginx pela nossa.
+
+03-primary-service-falho.yaml: Cria o Service do endpoint primário (internal-api-primary). Crucialmente, ele não tem Deployment ou Pods associados, garantindo que qualquer conexão com ele falhe.
+
+04-job-com-backoff.yaml: O coração da simulação. Cria o Job que executa um script shell, monta o Secret como variável de ambiente e contém toda a lógica de retry/backoff/fallback.
